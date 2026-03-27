@@ -17,5 +17,6 @@ typedef struct s_TableHead {
 } TableHead;
 
 ErrorCode TableHead_open(TableHead *th, const uint8_t *tableName);
+ErrorCode TableHead_reopen(TableHead *th);
 
 #endif
