@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 
-#define PAGE_SIZE   (128)
+#define PAGE_POW    (7)
+#define PAGE_SIZE   (1 << (PAGE_POW))
 typedef uint64_t page64_t;
 
 #define TABLE_NAME_LENGTH_MIN   (3)
