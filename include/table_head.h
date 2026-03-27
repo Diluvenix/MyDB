@@ -10,8 +10,8 @@ typedef struct s_TableHead {
     uint64_t id;
     uint8_t name[TABLE_NAME_LENGTH_MAX];
 
-    uint64_t rootId;
-    uint64_t nextId;
+    page64_t rootId;
+    page64_t nextId;
 
     Journal journal;
 } TableHead;
