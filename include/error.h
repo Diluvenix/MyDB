@@ -3,6 +3,7 @@
 
 typedef enum e_ErrorCode {
     ERROR_OK = 0,
+    ERROR_NOT_IMPLEMENTED,
 } ErrorCode;
 
 #endif
