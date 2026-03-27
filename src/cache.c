@@ -8,9 +8,9 @@ ErrorCode CACHE_deinit(){
     return ERROR_OK;
 }
 
-ErrorCode CACHE_read(uint64_t filePtr, uint64_t pagePos, void* buf, page64_t n){
+ErrorCode CACHE_read(uint64_t tableId, page64_t pagePos, void* buf, page64_t n){
     return ERROR_OK;
 }
-ErrorCode CACHE_devalidate(uint64_t filePtr, uint64_t pagePos, page64_t n){
+ErrorCode CACHE_devalidate(uint64_t tableId, page64_t pagePos, page64_t n){
     return ERROR_OK;
 }

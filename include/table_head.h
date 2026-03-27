@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include "const.h"
 #include "error.h"
-#include "journal.h"
 
 typedef struct s_TableHead {
     uint64_t id;
@@ -13,7 +12,8 @@ typedef struct s_TableHead {
     page64_t rootId;
     page64_t nextId;
 
-    Journal journal;
+    int64_t filePtr;
+    int64_t journalFilePtr;
 } TableHead;
 
 ErrorCode TableHead_open(TableHead *th, const uint8_t *tableName);
