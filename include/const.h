@@ -12,4 +12,6 @@ typedef uint64_t page64_t;
 #define TABLE_NAME_LENGTH_MIN   (3)
 #define TABLE_NAME_LENGTH_MAX   ((PAGE_SIZE) - (5 * 8))
 
+#define TABLE_NODE_CHILD_COUNT  (((PAGE_SIZE) - (6 * 8)) / 16)
+
 #endif
