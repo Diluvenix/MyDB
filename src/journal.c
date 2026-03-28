@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "cache.h"
 #include "const.h"
 #include "file.h"
 #include "logging.h"
@@ -57,7 +58,7 @@ ErrorCode Journal_commit(TableHead *th) {
     uint64_t dataPos, n;
     uint8_t buf[PAGE_SIZE];
     
-    int warnings; ErrorCode e;
+    int warnings = 0; ErrorCode e;
     
     TRY(FILE_seek(th->journalFilePtr, 0, SEEK_SET), "Error whilst seeking start of journal file for table \"%s\"", th->name);
     
@@ -74,6 +75,7 @@ ErrorCode Journal_commit(TableHead *th) {
         TRY(FILE_read(th->journalFilePtr, &n, sizeof(uint64_t), &warnings), "Error whilst reading journal data size for table \"%s\"", th->name)
         TRY(FILE_read(th->journalFilePtr, buf, n, &warnings), "Error whilst reading journal data for table \"%s\"", th->name)
     
+        TRY(CACHE_devalidate(th->id, pagePos), "Error whilst devalidating cache of page %" PRIp64 " for table \"%s\"", pagePos, th->name)
         TRY(FILE_writeAt(th->filePtr, (pagePos << PAGE_POW) + dataPos, buf, n), "Error whilst writing datablock to file for table \"%s\"", th->name);
     }
     if (! (warnings & WARNING_EOF)) {

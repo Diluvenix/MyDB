@@ -14,12 +14,12 @@ ErrorCode TableHead_open(TableHead *th, const uint8_t *tableName) {
 ErrorCode TableHead_reopen(TableHead *th) {
     assert(th->name[0] != '\0');
     
-    int fd, warnings; ErrorCode e;
+    int fd, warnings = 0; ErrorCode e;
     TRY(FILE_open(&fd, (char *)th->name), "Error whilst opening file for table \"%s\"", th->name);
     if ((e = FILE_read(fd, th, PAGE_SIZE, &warnings)) != ERROR_OK && warnings == WARNING_NONE) {
         LOGGING_error("Error whilst reading table head from file for table \"%s\"", th->name);
         return e;
-    } else if (warnings &= WARNING_EOF) {
+    } else if (warnings & WARNING_EOF) {
         th->filePtr = fd;
         TRY(Journal_write(th, 0, 0, th, PAGE_SIZE), "Error whilst writing table head to journal for table \"%s\"", th->name);
         TRY(Journal_stage(th), "Error whilst staging table head to journal for table \"%s\"", th->name);

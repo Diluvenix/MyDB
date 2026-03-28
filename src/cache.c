@@ -29,6 +29,9 @@ ErrorCode CACHE_read(uint64_t tableId, page64_t pagePos, void* buf){
 
     return ERROR_NOT_IMPLEMENTED;
 }
-ErrorCode CACHE_devalidate(uint64_t tableId, page64_t pagePos, page64_t n){
-    return ERROR_OK;
+ErrorCode CACHE_devalidate(uint64_t tableId, page64_t pagePos){
+    if (tableId == 0 && pagePos == 0)
+        return ERROR_OK;
+
+    return ERROR_NOT_IMPLEMENTED;
 }
