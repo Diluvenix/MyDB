@@ -7,6 +7,7 @@ ErrorCode FILE_init(void);
 ErrorCode FILE_deinit(void);
 
 ErrorCode FILE_open(int *fd, const char *filename);
+ErrorCode FILE_close(int fd);
 ErrorCode FILE_seek(int fd, off_t offset, int whence);
 ErrorCode FILE_sync(int fd);
 

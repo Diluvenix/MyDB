@@ -68,6 +68,16 @@ ErrorCode FILE_open(int *fd, const char *filename) {
 
     return ERROR_OK;
 }
+ErrorCode FILE_close(int fd) {
+    while (close(fd) < 0) {
+        if (errno != EINTR) {
+            LOGGING_perror("Error whilst closing file descriptor %d", fd);
+            return ERROR_FILE_IO;
+        }
+    }
+
+    return ERROR_OK;
+}
 
 ErrorCode FILE_seek(int fd, off_t offset, int whence) {
     if (lseek(fd, offset, whence) == ((off_t)-1)) {

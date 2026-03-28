@@ -1,5 +1,6 @@
 #include "cache.h"
 #include "error.h"
+#include "logging.h"
 #include "table_head.h"
 
 static TableHead systemTable = {
@@ -8,9 +9,15 @@ static TableHead systemTable = {
 };
 
 ErrorCode CACHE_init(){
+    TRY(TableHead_reopen(&systemTable), "Error whilst loading table head for table \"_system\"");
+    
+    LOGGING_info("Sucessfully initialized cache");
     return ERROR_OK;
 }
 ErrorCode CACHE_deinit(){
+    TRY(TableHead_close(&systemTable), "Error whilst closing table head for table \"_system\"");
+
+    LOGGING_info("Sucessfully deinitialized cache");
     return ERROR_OK;
 }
 

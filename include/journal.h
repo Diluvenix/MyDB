@@ -7,7 +7,7 @@
 #include "table_head.h"
 
 ErrorCode Journal_open(TableHead *th, const char *destFileName);
-ErrorCode Journal_write(const TableHead *th, page64_t pagePos, uint64_t dataPos, const void *buf, page64_t n);
+ErrorCode Journal_write(const TableHead *th, page64_t pagePos, uint64_t dataPos, const void *buf, size_t n);
 ErrorCode Journal_commit(TableHead *th);
 
 #endif
