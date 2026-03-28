@@ -26,15 +26,20 @@ ErrorCode TableHead_reopen(TableHead *th) {
     }
 
     th->filePtr = fd;
-    LOGGING_info("Sucessfully reopened TableHead of table \"%s\"", th->name);
+    th->journalFilePtr = -1;
+    LOGGING_info("Sucessfully reopened table head of table \"%s\"", th->name);
     return ERROR_OK;
 }
 
 ErrorCode TableHead_close(TableHead *th) {
-    if (th->journalFilePtr >= 0)
+    if (th->journalFilePtr >= 0) {
         TRY(FILE_close(th->filePtr), "Error whilst closing journal file for table \"%s\"", th->name);
-    if (th->filePtr >= 0)
+        LOGGING_debug("Sucessfully closed journal file for table \"%s\"", th->name);
+    }
+    if (th->filePtr >= 0){
         TRY(FILE_close(th->filePtr), "Error whilst closing file for table \"%s\"", th->name);
+        LOGGING_debug("Sucessfully closed file for table \"%s\"", th->name);
+    }
 
     return ERROR_OK;
 }

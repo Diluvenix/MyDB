@@ -66,6 +66,7 @@ ErrorCode FILE_open(int *fd, const char *filename) {
         }
     }
 
+    LOGGING_debug("Sucessfully opened file \"%s\" as %d", filename, *fd);
     return ERROR_OK;
 }
 ErrorCode FILE_close(int fd) {
@@ -76,15 +77,17 @@ ErrorCode FILE_close(int fd) {
         }
     }
 
+    LOGGING_debug("Sucessfully closed file %d", fd);
     return ERROR_OK;
 }
 
 ErrorCode FILE_seek(int fd, off_t offset, int whence) {
     if (lseek(fd, offset, whence) == ((off_t)-1)) {
-        LOGGING_perror("Error whilst seeking file position");
+        LOGGING_perror("Error whilst seeking position in file %d", fd);
         return ERROR_FILE_IO;
     }
 
+    LOGGING_debug("Sucessfully seeked position in file %d", fd);
     return ERROR_OK;
 }
 
@@ -94,7 +97,7 @@ ErrorCode FILE_sync(int fd) {
     while (fsync(fd)) {
         if (errno != EINTR)
         {
-            LOGGING_perror("Error whilst syncing file to disk");
+            LOGGING_perror("Error whilst syncing file %d to disk", fd);
             return ERROR_FILE_IO;
         }
     }
@@ -107,8 +110,7 @@ ErrorCode FILE_sync(int fd) {
         }
     }
 
-    LOGGING_debug("Sucessfully synced file to disk");
-
+    LOGGING_debug("Sucessfully synced file %d to disk", fd);
     return ERROR_OK;
 }
 
@@ -121,16 +123,17 @@ ErrorCode FILE_read(int fd, void *buf, size_t n, int *warnings) {
             offset += nread;
         }
         else if (nread == 0) {
-            LOGGING_warning("Encountered EOF whilst reading data from file");
+            LOGGING_warning("Encountered EOF whilst reading data from file %d", fd);
             *warnings |= WARNING_EOF;
             return ERROR_FILE_IO;
         }
         else if (errno != EINTR) {
-            LOGGING_perror("Error whilst reading data from file");
+            LOGGING_perror("Error whilst reading data from file %d", fd);
             return ERROR_FILE_IO;
         }
     }
 
+    LOGGING_debug("Sucessfully read %zu bytes from file %d", n, fd);
     return ERROR_OK;
 }
 
@@ -143,16 +146,17 @@ ErrorCode FILE_readAt(int fd, off_t position, void *buf, size_t n, int *warnings
             offset += nread;
         }
         else if (nread == 0) {
-            LOGGING_warning("Encountered EOF whilst reading data from file");
+            LOGGING_warning("Encountered EOF whilst reading data from file %d", fd);
             *warnings |= WARNING_EOF;
             return ERROR_FILE_IO;
         }
         else if (errno != EINTR) {
-            LOGGING_perror("Error whilst reading data from file");
+            LOGGING_perror("Error whilst reading data from file %d", fd);
             return ERROR_FILE_IO;
         }
     }
 
+    LOGGING_debug("Sucessfully read %zu bytes from file %d", n, fd);
     return ERROR_OK;
 }
 
@@ -165,13 +169,12 @@ ErrorCode FILE_write(int fd, const void *buf, size_t n) {
             offset += nwrite;
         }
         else if (errno != EINTR) {
-            LOGGING_perror("Error whilst writing data into file");
+            LOGGING_perror("Error whilst writing data into file %d", fd);
             return ERROR_FILE_IO;
         }
     }
 
-    LOGGING_debug("Sucessfully wrote %zu bytes into file", n);
-
+    LOGGING_debug("Sucessfully wrote %zu bytes into file %d", n, fd);
     return ERROR_OK;
 }
 
@@ -184,23 +187,21 @@ ErrorCode FILE_writeAt(int fd, off_t position, const void *buf, size_t n) {
             offset += nwrite;
         }
         else if (errno != EINTR) {
-            LOGGING_perror("Error whilst writing data into file");
+            LOGGING_perror("Error whilst writing data into file %d", fd);
             return ERROR_FILE_IO;
         }
     }
 
-    LOGGING_debug("Sucessfully wrote %zu bytes into file", n);
-
+    LOGGING_debug("Sucessfully wrote %zu bytes into file %d", n, fd);
     return ERROR_OK;
 }
 
 ErrorCode FILE_truncate(int fd, off_t length) {
     if (ftruncate(fd, length)) {
-        LOGGING_perror("Error whilst truncating file to %zu bytes", length);
+        LOGGING_perror("Error whilst truncating file %d to %zu bytes", fd, length);
         return ERROR_FILE_IO;
     }
 
-    LOGGING_debug("Sucessfully truncated file to %zu bytes", length);
-
+    LOGGING_debug("Sucessfully truncated file %d to %zu bytes", fd, length);
     return ERROR_OK;
 }
