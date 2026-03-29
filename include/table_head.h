@@ -20,4 +20,6 @@ ErrorCode TableHead_open(TableHead *th, const uint8_t *tableName);
 ErrorCode TableHead_reopen(TableHead *th);
 ErrorCode TableHead_close(TableHead *th);
 
+ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value);
+
 #endif

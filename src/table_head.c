@@ -1,11 +1,13 @@
 #include "table_head.h"
 
 #include <assert.h>
+#include <stddef.h>
 #include "const.h"
 #include "error.h"
 #include "file.h"
 #include "journal.h"
 #include "logging.h"
+#include "table_node.h"
 
 ErrorCode TableHead_open(TableHead *th, const uint8_t *tableName) {
     return ERROR_OK;
@@ -46,3 +48,31 @@ ErrorCode TableHead_close(TableHead *th) {
 
     return ERROR_OK;
 }
+
+ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) {
+    if (th->rootId == 0) {
+        TableNode newNode = {
+            .id=th->nextId++,
+            .flags=TABLE_NODE_IS_LEAF_FLAG,
+            .elementCount=1,
+            .prev=0,
+            .next=0,
+            .parent=0,
+            .keys={key,0},
+            .values={value,0}
+        };
+        TRY(Journal_write(th, newNode.id, 0, &newNode, PAGE_SIZE), "Error whilst writing new node to journal for table \"%s\"", th->name);
+        TRY(Journal_write(th, 0, offsetof(TableHead, rootId), &newNode.id, sizeof(page64_t)), "Error whilst updating rootId to journal for table \"%s\"", th->name);
+        TRY(Journal_write(th, 0, offsetof(TableHead, nextId), &th->nextId, sizeof(page64_t)), "Error whilst updating nextId to journal for table \"%s\"", th->name);
+    }
+    else {
+        return ERROR_NOT_IMPLEMENTED;
+    }
+    
+    TRY(Journal_stage(th), "Error whilst staging changes to table \"%s\"", th->name);
+    TRY(Journal_commit(th), "Error whilst committing changes to table \"%s\"", th->name);
+    LOGGING_info("Sucessfully inserted [%" PRIu64 "]:[%" PRIu64 "] into table \"%s\"", key, value, th->name);
+
+    return ERROR_OK;
+}
+

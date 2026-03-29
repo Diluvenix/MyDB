@@ -21,9 +21,9 @@ ErrorCode CACHE_deinit(){
     return ERROR_OK;
 }
 
-ErrorCode CACHE_read(uint64_t tableId, page64_t pagePos, void* buf){
+ErrorCode CACHE_read(uint64_t tableId, page64_t pagePos, void **buf){
     if (tableId == 0 && pagePos == 0) {
-        buf = &systemTable;
+        *buf = &systemTable;
         return ERROR_OK;
     }
 
@@ -33,5 +33,5 @@ ErrorCode CACHE_devalidate(uint64_t tableId, page64_t pagePos){
     if (tableId == 0 && pagePos == 0)
         return ERROR_OK;
 
-    return ERROR_NOT_IMPLEMENTED;
+    return ERROR_OK;
 }
