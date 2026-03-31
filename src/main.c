@@ -22,7 +22,7 @@ int main(void) {
         LOGGING_error("Error whilst reading \"_system\" database");
         goto exit_error;
     }
-    if (TableHead_insertKeyValue(_system, 5, 25) != ERROR_OK) {
+    if (TableHead_insertKeyValue(_system, 5, 25, NULL) != ERROR_OK) {
         LOGGING_error("Error whilst inserting [5]:[25] into table \"_system\"");
         goto exit_error;
     }

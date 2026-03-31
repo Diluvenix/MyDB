@@ -2,6 +2,8 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
+#include "cache.h"
 #include "const.h"
 #include "error.h"
 #include "file.h"
@@ -49,7 +51,7 @@ ErrorCode TableHead_close(TableHead *th) {
     return ERROR_OK;
 }
 
-ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) {
+ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, int *warnings) {
     if (th->rootId == 0) {
         TableNode newNode = {
             .id=th->nextId++,
@@ -66,6 +68,27 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
         TRY(Journal_write(th, 0, offsetof(TableHead, nextId), &th->nextId, sizeof(page64_t)), "Error whilst updating nextId to journal for table \"%s\"", th->name);
     }
     else {
+        TableNode *node;
+
+        TRY(CACHE_read(th->id, th->rootId, (void **)&node), "Error whilst retrieving root node from cache for table \"%s\"", th->name);
+
+        while (!(node->flags & TABLE_NODE_IS_LEAF_FLAG)) {
+            LOGGING_error("Node decend not implemented!");
+            return ERROR_NOT_IMPLEMENTED;
+        }
+
+        uint64_t lowerBound = 0, upperBound = node->elementCount - 1;
+        while (lowerBound < upperBound) {
+            LOGGING_error("Binary Search not implemented!");
+            return ERROR_NOT_IMPLEMENTED;
+        }
+
+        if (node->keys[lowerBound] == key) {
+            LOGGING_warning("Key [%" PRIu64 "] already in table \"%s\"", key, th->name);
+            if (warnings != NULL) *warnings |= WARNING_KEY_NOT_UNIQUE;
+            return ERROR_VALIDATION_UNIQUE;
+        }
+
         return ERROR_NOT_IMPLEMENTED;
     }
     
