@@ -37,7 +37,7 @@ ErrorCode CACHE_read(uint64_t tableId, page64_t pagePos, void **buf){
             return ERROR_NOT_IMPLEMENTED;
         }
 
-        TRY(FILE_read(systemTable.filePtr, cacheRef, PAGE_SIZE, NULL), "Error whilst reading from position %" PRIp64 " in table [%" PRIu64 "]", pagePos, tableId);
+        TRY(FILE_readAt(systemTable.filePtr, pagePos << PAGE_POW, cacheRef, PAGE_SIZE, NULL), "Error whilst reading from position %" PRIp64 " in table [%" PRIu64 "]", pagePos, tableId);
 
         *buf = cacheRef;
         return ERROR_OK;
