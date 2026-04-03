@@ -80,10 +80,17 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, 
         }
 
         // Search for key in leaf node
-        uint64_t lowerBound = 0, upperBound = node->elementCount - 1;
+        uint64_t lowerBound = 0, upperBound = node->elementCount - 1, innerBound;
         while (lowerBound < upperBound) {
-            LOGGING_error("Binary Search not implemented!");
-            return ERROR_NOT_IMPLEMENTED;
+            innerBound = lowerBound + ((upperBound - lowerBound + 1) >> 1);
+            if (node->keys[innerBound] < key) {
+                lowerBound = innerBound;
+            } else if (node->keys[innerBound] > key) {
+                upperBound = innerBound - 1;
+            } else {
+                lowerBound = innerBound;
+                break;
+            }
         }
 
         // Check for key already exists
