@@ -7,7 +7,7 @@ typedef enum e_ErrorCode {
     ERROR_OK = 0,
     ERROR_FILE_IO,
     ERROR_JOURNAL_UNSTAGED,
-    ERROR_VALIDATION_UNIQUE,
+    ERROR_TABLE_INSERTION,
     ERROR_NOT_IMPLEMENTED,
 } ErrorCode;
 

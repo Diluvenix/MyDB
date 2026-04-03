@@ -53,6 +53,7 @@ ErrorCode TableHead_close(TableHead *th) {
 
 ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, int *warnings) {
     if (th->rootId == 0) {
+        // Create new root node
         TableNode newNode = {
             .id=th->nextId++,
             .flags=TABLE_NODE_IS_LEAF_FLAG,
@@ -63,33 +64,50 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, 
             .keys={key,0},
             .values={value,0}
         };
+        th->rootId = newNode.id;
         TRY(Journal_write(th, newNode.id, 0, &newNode, PAGE_SIZE), "Error whilst writing new node to journal for table \"%s\"", th->name);
-        TRY(Journal_write(th, 0, offsetof(TableHead, rootId), &newNode.id, sizeof(page64_t)), "Error whilst updating rootId to journal for table \"%s\"", th->name);
+        TRY(Journal_write(th, 0, offsetof(TableHead, rootId), &th->rootId, sizeof(page64_t)), "Error whilst updating rootId to journal for table \"%s\"", th->name);
         TRY(Journal_write(th, 0, offsetof(TableHead, nextId), &th->nextId, sizeof(page64_t)), "Error whilst updating nextId to journal for table \"%s\"", th->name);
     }
     else {
         TableNode *node;
-
         TRY(CACHE_read(th->id, th->rootId, (void **)&node), "Error whilst retrieving root node from cache for table \"%s\"", th->name);
-
+        
+        // Decend into correct leaf node
         while (!(node->flags & TABLE_NODE_IS_LEAF_FLAG)) {
             LOGGING_error("Node decend not implemented!");
             return ERROR_NOT_IMPLEMENTED;
         }
 
+        // Search for key in leaf node
         uint64_t lowerBound = 0, upperBound = node->elementCount - 1;
         while (lowerBound < upperBound) {
             LOGGING_error("Binary Search not implemented!");
             return ERROR_NOT_IMPLEMENTED;
         }
 
+        // Check for key already exists
         if (node->keys[lowerBound] == key) {
             LOGGING_warning("Key [%" PRIu64 "] already in table \"%s\"", key, th->name);
             if (warnings != NULL) *warnings |= WARNING_KEY_NOT_UNIQUE;
-            return ERROR_VALIDATION_UNIQUE;
+            return ERROR_TABLE_INSERTION;
         }
 
-        return ERROR_NOT_IMPLEMENTED;
+        // Split node when full
+        while (node->elementCount >= TABLE_NODE_CHILD_COUNT) {
+            LOGGING_error("Node splitting not implemented!");
+            return ERROR_NOT_IMPLEMENTED;
+        }
+
+        // Final key value insertion
+        for (upperBound = node->elementCount; node->keys[upperBound - 1] > key && upperBound > 0; upperBound--) {
+            node->keys[upperBound] = node->keys[upperBound - 1];
+            node->values[upperBound] = node->values[upperBound - 1];
+        }
+        node->keys[upperBound] = key;
+        node->values[upperBound] = value;
+        node->elementCount += 1;
+        TRY(Journal_write(th, node->id, 0, node, PAGE_SIZE), "Error whilst writing node[%" PRIp64 "] to journal for table \"%s\"", node->id, th->name);
     }
     
     TRY(Journal_stage(th), "Error whilst staging changes to table \"%s\"", th->name);
