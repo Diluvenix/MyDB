@@ -191,8 +191,10 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
                 }
 
                 if (newNode.flags & TABLE_NODE_IS_INNER_FLAG) {
-                    LOGGING_error("New Node Parent update and cache invalidation not yet implemented!");
-                    return ERROR_NOT_IMPLEMENTED;
+                    for (lowerBound = 0; lowerBound < TABLE_NODE_CHILD_SPLIT_MIN; lowerBound++) {
+                        TRY(CACHE_devalidate(th->id, newNode.values[lowerBound]), "Error whilst devalidating cache for node [%" PRIp64 "] for table \"%s\"", newNode.values[lowerBound], th->name);
+                        TRY(Journal_write(th, newNode.values[lowerBound], offsetof(TableNode, parent), &newNode.id, sizeof(page64_t)), "Error whilst updating parent information to journal for table \"%s\"", th->name);
+                    }
                 }
                 
                 key = newNode.keys[0];
