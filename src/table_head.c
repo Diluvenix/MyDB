@@ -113,13 +113,13 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
         }
 
         TableNode newNode = {
-            .flags = node->flags,
-            .elementCount = TABLE_NODE_CHILD_SPLIT_MIN,
-            .prev = node->id,
-            .next = node->next
+            .elementCount = TABLE_NODE_CHILD_SPLIT_MIN
         };
         // Split node when full
         while (node->elementCount >= TABLE_NODE_CHILD_COUNT) {
+            newNode.flags = node->flags;
+            newNode.prev = node->id;
+            newNode.next = node->next;
             TRY(TableHead_getFree(th, &newNode.id), "Error whilst getting next freeId for table \"%s\"", th->name);
 
             node->elementCount = TABLE_NODE_CHILD_SPLIT_MAX;
