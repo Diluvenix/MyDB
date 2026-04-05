@@ -23,7 +23,7 @@ int main(void) {
         goto exit_error;
     }
     for (int i = 0; i < 6; i++) {
-        if (TableHead_insertKeyValue(_system, i, i * i, NULL) != ERROR_OK) {
+        if (TableHead_insertKeyValue(_system, i, i * i) != ERROR_OK) {
             LOGGING_error("Error whilst inserting [%d]:[%d] into table \"_system\"", i, i * i);
             goto exit_error;
         }

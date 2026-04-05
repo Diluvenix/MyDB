@@ -20,7 +20,7 @@ typedef struct s_TableHead {
 ErrorCode TableHead_reopen(TableHead *th);
 ErrorCode TableHead_close(TableHead *th);
 
-ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, int *warnings);
+ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value);
 ErrorCode TableHead_getFree(TableHead *th, page64_t *id);
 
 #endif

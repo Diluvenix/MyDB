@@ -47,7 +47,7 @@ ErrorCode TableHead_close(TableHead *th) {
     return ERROR_OK;
 }
 
-ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, int *warnings) {
+ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) {
     if (th->rootId == 0) {
         // Create new root node
         TableNode newNode = {
@@ -93,7 +93,6 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, 
         // Check for key already exists
         if (node->keys[lowerBound] == key) {
             LOGGING_warning("Key [%" PRIu64 "] already in table \"%s\"", key, th->name);
-            if (warnings != NULL) *warnings |= WARNING_KEY_NOT_UNIQUE;
             return ERROR_TABLE_INSERTION;
         }
 
