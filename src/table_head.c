@@ -87,9 +87,9 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
                     lowerBound = innerBound;
                     break;
                 }
-
-                TRY(CACHE_read(th->id, node->values[lowerBound], (void **)&node), "Error whilst retrieving node [%" PRIp64 "] from cache for table \"%s\"", node->values[lowerBound], th->name)
             }
+
+            TRY(CACHE_read(th->id, node->values[lowerBound], (void **)&node), "Error whilst retrieving node [%" PRIp64 "] from cache for table \"%s\"", node->values[lowerBound], th->name)
         }
 
         // Search for key in leaf node
@@ -108,7 +108,7 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
 
         // Check for key already exists
         if (node->keys[lowerBound] == key) {
-            LOGGING_warning("Key [%" PRIu64 "] already in table \"%s\"", key, th->name);
+            LOGGING_error("Key [%" PRIu64 "] already in table \"%s\"", key, th->name);
             return ERROR_TABLE_INSERTION;
         }
 
@@ -178,8 +178,15 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
                 TRY(Journal_write(th, 0, offsetof(TableHead, rootId), &th->rootId, sizeof(page64_t)), "Error whilst updating rootId to journal for table \"%s\"", th->name);
                 break;
             } else {
-                LOGGING_error("Parent Node insertion not yet implemented!");
-                return ERROR_NOT_IMPLEMENTED;
+                newNode.parent = node->parent;
+
+                TRY(Journal_write(th, node->id, 0, node, PAGE_SIZE), "Error whilst writing node[%" PRIp64 "] to journal for table \"%s\"", node->id, th->name);
+                TRY(Journal_write(th, newNode.id, 0, &newNode, PAGE_SIZE), "Error whilst writing node[%" PRIp64 "] to journal for table \"%s\"", newNode.id, th->name);
+
+                if (newNode.next != 0) {
+                    LOGGING_error("newNode.next.prev update not yet implemented!");
+                    return ERROR_NOT_IMPLEMENTED;
+                }
 
                 if (newNode.flags & TABLE_NODE_IS_INNER_FLAG) {
                     LOGGING_error("New Node Parent update and cache invalidation not yet implemented!");
@@ -188,6 +195,7 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
                 
                 key = newNode.keys[0];
                 value = newNode.id;
+                TRY(CACHE_read(th->id, node->parent, (void **)&node), "Error whilst retrieving node [%" PRIp64 "] from cache for table \"%s\"", node->parent, th->name)
             }
         }
 
