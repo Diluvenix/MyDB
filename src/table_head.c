@@ -73,13 +73,27 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
         TRY(CACHE_read(th->id, th->rootId, (void **)&node), "Error whilst retrieving root node from cache for table \"%s\"", th->name);
         
         // Decend into correct leaf node
-        while (!(node->flags & TABLE_NODE_IS_LEAF_FLAG)) {
-            LOGGING_error("Node decend not implemented!");
-            return ERROR_NOT_IMPLEMENTED;
+        uint64_t lowerBound, upperBound, innerBound;
+        while (node->flags & TABLE_NODE_IS_INNER_FLAG) {
+            lowerBound = 0; upperBound = node->elementCount - 1;
+
+            while (lowerBound < upperBound) {
+                innerBound = lowerBound + ((upperBound - lowerBound + 1) >> 1);
+                if (node->keys[innerBound] < key) {
+                    lowerBound = innerBound;
+                } else if (node->keys[innerBound] > key) {
+                    upperBound = innerBound - 1;
+                } else {
+                    lowerBound = innerBound;
+                    break;
+                }
+
+                TRY(CACHE_read(th->id, node->values[lowerBound], (void **)&node), "Error whilst retrieving node [%" PRIp64 "] from cache for table \"%s\"", node->values[lowerBound], th->name)
+            }
         }
 
         // Search for key in leaf node
-        uint64_t lowerBound = 0, upperBound = node->elementCount - 1, innerBound;
+        lowerBound = 0; upperBound = node->elementCount - 1;
         while (lowerBound < upperBound) {
             innerBound = lowerBound + ((upperBound - lowerBound + 1) >> 1);
             if (node->keys[innerBound] < key) {
