@@ -1,9 +1,9 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include "cache.h"
 #include "error.h"
 #include "file.h"
 #include "logging.h"
+#include "table_head.h"
 
 int main(void) {
     if (FILE_init() != ERROR_OK) {
@@ -17,7 +17,18 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Hello, World!\n");
+    TableHead *_system;
+    if (CACHE_read(0, 0, (void **)&_system) != ERROR_OK) {
+        LOGGING_error("Error whilst reading \"_system\" database");
+        goto exit_error;
+    }
+    for (int i = 0; i < 1000; i++) {
+        if (TableHead_insertKeyValue(_system, i, i * i) != ERROR_OK) {
+            LOGGING_error("Error whilst inserting [%d]:[%d] into table \"_system\"", i, i * i);
+            goto exit_error;
+        }
+    }
+
 
     if (CACHE_deinit() != ERROR_OK) {
         LOGGING_error("Error whilst deinitializing cache");
@@ -31,4 +42,9 @@ int main(void) {
     }
 
     return 0;
+
+exit_error:
+    CACHE_deinit();
+    FILE_deinit();
+    exit(EXIT_FAILURE);
 }

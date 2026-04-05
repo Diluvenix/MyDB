@@ -11,13 +11,16 @@ typedef struct s_TableHead {
 
     page64_t rootId;
     page64_t nextId;
+    page64_t freeId;
 
     int64_t filePtr;
     int64_t journalFilePtr;
 } TableHead;
 
-ErrorCode TableHead_open(TableHead *th, const uint8_t *tableName);
 ErrorCode TableHead_reopen(TableHead *th);
 ErrorCode TableHead_close(TableHead *th);
+
+ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value);
+ErrorCode TableHead_getFree(TableHead *th, page64_t *id);
 
 #endif

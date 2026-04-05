@@ -124,7 +124,7 @@ ErrorCode FILE_read(int fd, void *buf, size_t n, int *warnings) {
         }
         else if (nread == 0) {
             LOGGING_warning("Encountered EOF whilst reading data from file %d", fd);
-            *warnings |= WARNING_EOF;
+            if (warnings != NULL) *warnings |= WARNING_EOF;
             return ERROR_FILE_IO;
         }
         else if (errno != EINTR) {
@@ -147,7 +147,7 @@ ErrorCode FILE_readAt(int fd, off_t position, void *buf, size_t n, int *warnings
         }
         else if (nread == 0) {
             LOGGING_warning("Encountered EOF whilst reading data from file %d", fd);
-            *warnings |= WARNING_EOF;
+            if (warnings != NULL) *warnings |= WARNING_EOF;
             return ERROR_FILE_IO;
         }
         else if (errno != EINTR) {
