@@ -9,7 +9,7 @@
 
 static TableHead systemTable = {
     0, "_system",
-    0, 1, -1, -1
+    0, 1, 0, -1, -1
 };
 
 ErrorCode CACHE_init(){

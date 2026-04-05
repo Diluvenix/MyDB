@@ -55,7 +55,7 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, 
     if (th->rootId == 0) {
         // Create new root node
         TableNode newNode = {
-            .id=th->nextId++,
+            .id=0,
             .flags=TABLE_NODE_IS_LEAF_FLAG,
             .elementCount=1,
             .prev=0,
@@ -64,10 +64,11 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, 
             .keys={key,0},
             .values={value,0}
         };
+        TRY(TableHead_getFree(th, &newNode.id), "Error whilst getting next freeId for table \"%s\"", th->name);
+
         th->rootId = newNode.id;
         TRY(Journal_write(th, newNode.id, 0, &newNode, PAGE_SIZE), "Error whilst writing new node to journal for table \"%s\"", th->name);
         TRY(Journal_write(th, 0, offsetof(TableHead, rootId), &th->rootId, sizeof(page64_t)), "Error whilst updating rootId to journal for table \"%s\"", th->name);
-        TRY(Journal_write(th, 0, offsetof(TableHead, nextId), &th->nextId, sizeof(page64_t)), "Error whilst updating nextId to journal for table \"%s\"", th->name);
     }
     else {
         TableNode *node;
@@ -116,7 +117,7 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, 
         node->elementCount += 1;
         TRY(Journal_write(th, node->id, 0, node, PAGE_SIZE), "Error whilst writing node[%" PRIp64 "] to journal for table \"%s\"", node->id, th->name);
     }
-    
+
     TRY(Journal_stage(th), "Error whilst staging changes to table \"%s\"", th->name);
     TRY(Journal_commit(th), "Error whilst committing changes to table \"%s\"", th->name);
     LOGGING_info("Sucessfully inserted [%" PRIu64 "]:[%" PRIu64 "] into table \"%s\"", key, value, th->name);
@@ -124,3 +125,13 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value, 
     return ERROR_OK;
 }
 
+ErrorCode TableHead_getFree(TableHead *th, page64_t *id) {
+    if (th->freeId == 0) {
+        *id = th->nextId++;
+        TRY(Journal_write(th, 0, offsetof(TableHead, nextId), &th->nextId, sizeof(page64_t)), "Error whilst updating nextId to journal for table \"%s\"", th->name);
+    } else {
+        LOGGING_error("Free page usage not yet implemented");
+        return ERROR_NOT_IMPLEMENTED;
+    }
+    return ERROR_OK;
+}
