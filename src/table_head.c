@@ -186,8 +186,8 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
                 TRY(Journal_write(th, newNode.id, 0, &newNode, PAGE_SIZE), "Error whilst writing node[%" PRIp64 "] to journal for table \"%s\"", newNode.id, th->name);
 
                 if (newNode.next != 0) {
-                    LOGGING_error("newNode.next.prev update not yet implemented!");
-                    return ERROR_NOT_IMPLEMENTED;
+                    TRY(CACHE_devalidate(th->id, newNode.next), "Error whilst devalidating cache for node [%" PRIp64 "] for table \"%s\"", newNode.next, th->name);
+                    TRY(Journal_write(th, newNode.next, offsetof(TableNode, prev), &newNode.id, sizeof(page64_t)), "Error whilst updating prev information to journal for table \"%s\"", th->name);
                 }
 
                 if (newNode.flags & TABLE_NODE_IS_INNER_FLAG) {
