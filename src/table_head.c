@@ -11,10 +11,6 @@
 #include "logging.h"
 #include "table_node.h"
 
-ErrorCode TableHead_open(TableHead *th, const uint8_t *tableName) {
-    return ERROR_OK;
-}
-
 ErrorCode TableHead_reopen(TableHead *th) {
     assert(th->name[0] != '\0');
     
