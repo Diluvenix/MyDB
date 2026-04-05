@@ -16,5 +16,6 @@ typedef uint64_t page64_t;
 #define TABLE_NODE_CHILD_SPLIT_MAX  (((TABLE_NODE_CHILD_COUNT) + 1) / 2)
 #define TABLE_NODE_CHILD_SPLIT_MIN  ((TABLE_NODE_CHILD_COUNT) + 1 - (TABLE_NODE_CHILD_SPLIT_MAX))
 #define TABLE_NODE_IS_LEAF_FLAG     (1 << 0)
+#define TABLE_NODE_IS_INNER_FLAG     (1 << 1)
 
 #endif

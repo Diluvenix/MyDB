@@ -51,7 +51,6 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
     if (th->rootId == 0) {
         // Create new root node
         TableNode newNode = {
-            .id=0,
             .flags=TABLE_NODE_IS_LEAF_FLAG,
             .elementCount=1,
             .prev=0,
@@ -98,8 +97,58 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
 
         // Split node when full
         while (node->elementCount >= TABLE_NODE_CHILD_COUNT) {
-            LOGGING_error("Node splitting not implemented!");
-            return ERROR_NOT_IMPLEMENTED;
+            TableNode newNode = {
+                .flags = node->flags,
+                .elementCount = TABLE_NODE_CHILD_SPLIT_MIN,
+                .prev = node->id,
+                .next = node->next
+            };
+            TRY(TableHead_getFree(th, &newNode.id), "Error whilst getting next freeId for table \"%s\"", th->name);
+
+            node->elementCount = TABLE_NODE_CHILD_SPLIT_MAX;
+            node->next = newNode.id;
+
+            lowerBound = 0;
+            if (node->keys[TABLE_NODE_CHILD_SPLIT_MAX] > key) {
+                for (upperBound = TABLE_NODE_CHILD_SPLIT_MAX; upperBound < TABLE_NODE_CHILD_COUNT; upperBound++) {
+                    newNode.keys[lowerBound] = node->keys[upperBound];
+                    newNode.values[lowerBound++] = node->values[upperBound];
+                }
+                for (upperBound = TABLE_NODE_CHILD_SPLIT_MAX; node->keys[upperBound - 1] > key && upperBound > 0; upperBound--) {
+                    node->keys[upperBound] = node->keys[upperBound - 1];
+                    node->values[upperBound] = node->values[upperBound - 1];
+                }
+                node->keys[upperBound] = key;
+                node->values[upperBound] = value;
+            }
+            else {
+                for (upperBound = TABLE_NODE_CHILD_SPLIT_MAX; upperBound < TABLE_NODE_CHILD_COUNT && node->keys[upperBound] < key; upperBound++) {
+                    newNode.keys[lowerBound] = node->keys[upperBound];
+                    newNode.values[lowerBound++] = node->values[upperBound];
+                }
+                newNode.keys[lowerBound] = key;
+                newNode.values[lowerBound++] = value;
+                for (; upperBound < TABLE_NODE_CHILD_COUNT; upperBound++) {
+                    newNode.keys[lowerBound] = node->keys[upperBound];
+                    newNode.values[lowerBound++] = node->values[upperBound];
+                }
+            }
+
+            if (node->parent == 0) {
+                LOGGING_error("Parent Node Creation not yet implemented!");
+                return ERROR_NOT_IMPLEMENTED;
+            } else {
+                LOGGING_error("Parent Node insertion not yet implemented!");
+                return ERROR_NOT_IMPLEMENTED;
+            }
+
+            if (newNode.flags & TABLE_NODE_IS_INNER_FLAG) {
+                LOGGING_error("New Node Parent update and cache invalidation not yet implemented!");
+                return ERROR_NOT_IMPLEMENTED;
+            }
+
+            key = newNode.keys[0];
+            value = newNode.id;
         }
 
         // Final key value insertion
