@@ -48,6 +48,9 @@ ErrorCode TableHead_close(TableHead *th) {
 }
 
 ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) {
+    LOGGING_EXECUTE_ON_INFO(uint64_t origKey = key);
+    LOGGING_EXECUTE_ON_INFO(uint64_t origValue = value);
+
     if (th->rootId == 0) {
         // Create new root node
         TableNode newNode = {
@@ -95,14 +98,14 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
             return ERROR_TABLE_INSERTION;
         }
 
+        TableNode newNode = {
+            .flags = node->flags,
+            .elementCount = TABLE_NODE_CHILD_SPLIT_MIN,
+            .prev = node->id,
+            .next = node->next
+        };
         // Split node when full
         while (node->elementCount >= TABLE_NODE_CHILD_COUNT) {
-            TableNode newNode = {
-                .flags = node->flags,
-                .elementCount = TABLE_NODE_CHILD_SPLIT_MIN,
-                .prev = node->id,
-                .next = node->next
-            };
             TRY(TableHead_getFree(th, &newNode.id), "Error whilst getting next freeId for table \"%s\"", th->name);
 
             node->elementCount = TABLE_NODE_CHILD_SPLIT_MAX;
@@ -135,20 +138,43 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
             }
 
             if (node->parent == 0) {
-                LOGGING_error("Parent Node Creation not yet implemented!");
-                return ERROR_NOT_IMPLEMENTED;
+                TRY(TableHead_getFree(th, &newNode.parent), "Error whilst getting next freeId for table \"%s\"", th->name);
+                node->parent = newNode.parent;
+
+                TRY(Journal_write(th, node->id, 0, node, PAGE_SIZE), "Error whilst writing node[%" PRIp64 "] to journal for table \"%s\"", node->id, th->name);
+                TRY(Journal_write(th, newNode.id, 0, &newNode, PAGE_SIZE), "Error whilst writing node[%" PRIp64 "] to journal for table \"%s\"", newNode.id, th->name);
+
+                if (newNode.flags & TABLE_NODE_IS_INNER_FLAG) {
+                    LOGGING_error("New Node Parent update and cache invalidation not yet implemented!");
+                    return ERROR_NOT_IMPLEMENTED;
+                }
+
+                key = newNode.keys[0];
+                value = newNode.id;
+
+                newNode.id = node->parent;
+                newNode.flags = TABLE_NODE_IS_INNER_FLAG;
+                newNode.elementCount = 1;
+                newNode.parent = newNode.prev = newNode.next = 0;
+                newNode.keys[0] = node->keys[0];
+                newNode.values[0] = node->id;
+                node = &newNode;
+
+                th->rootId = node->id;
+                TRY(Journal_write(th, 0, offsetof(TableHead, rootId), &th->rootId, sizeof(page64_t)), "Error whilst updating rootId to journal for table \"%s\"", th->name);
+                break;
             } else {
                 LOGGING_error("Parent Node insertion not yet implemented!");
                 return ERROR_NOT_IMPLEMENTED;
-            }
 
-            if (newNode.flags & TABLE_NODE_IS_INNER_FLAG) {
-                LOGGING_error("New Node Parent update and cache invalidation not yet implemented!");
-                return ERROR_NOT_IMPLEMENTED;
+                if (newNode.flags & TABLE_NODE_IS_INNER_FLAG) {
+                    LOGGING_error("New Node Parent update and cache invalidation not yet implemented!");
+                    return ERROR_NOT_IMPLEMENTED;
+                }
+                
+                key = newNode.keys[0];
+                value = newNode.id;
             }
-
-            key = newNode.keys[0];
-            value = newNode.id;
         }
 
         // Final key value insertion
@@ -164,7 +190,7 @@ ErrorCode TableHead_insertKeyValue(TableHead *th, uint64_t key, uint64_t value) 
 
     TRY(Journal_stage(th), "Error whilst staging changes to table \"%s\"", th->name);
     TRY(Journal_commit(th), "Error whilst committing changes to table \"%s\"", th->name);
-    LOGGING_info("Sucessfully inserted [%" PRIu64 "]:[%" PRIu64 "] into table \"%s\"", key, value, th->name);
+    LOGGING_info("Sucessfully inserted [%" PRIu64 "]:[%" PRIu64 "] into table \"%s\"", origKey, origValue, th->name);
 
     return ERROR_OK;
 }
